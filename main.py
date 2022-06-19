@@ -7,11 +7,12 @@ import network
 import WebServer
 import json
 
-wlan_id = "CzopaZone"
-wlan_pass = "a123456789"
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
+wlan_id = "CzopaZone"  # Definujemy nazwę sieci WIFI
+wlan_pass = "a123456789"  # Hasło dostępu do sieci wifi
+wlan = network.WLAN(network.STA_IF)  # ustawiamy wifi w tyb STA_IF
+wlan.active(True)  # Włączamy moduł wifi
 print('Connecting')
+# łączymy się z siecią
 while not wlan.isconnected():
     try:
         wlan.connect(wlan_id, wlan_pass)
@@ -20,38 +21,41 @@ while not wlan.isconnected():
     print('.')
 print("Connected... IP: " + wlan.ifconfig()[0])
 
-distance = Pin(18, Pin.OUT)
+distance = Pin(18, Pin.OUT)  # ustawiamy pin wyjscia który wyświetla czy można jechać czy nie
 distance.off()
 
-led = Pin(2, Pin.OUT)
-dir_pin = 22
-step_pin = 21
+led = Pin(2, Pin.OUT)  # definiujemy pin diody led
+dir_pin = 22  # definiujemy pin kierunku ruchu
+step_pin = 21  # definiujemy pin długości kroku
 
-pin_m0 = 13
-pin_m1 = 12
-pin_m2 = 14
+pin_m0 = 13  # definiujemy pin do kodowania rozdzielczosci ruchu
+pin_m1 = 12  # definiujemy pin do kodowania rozdzielczosci ruchu
+pin_m2 = 14  # definiujemy pin do kodowania rozdzielczosci ruchu
 
 step_type = 'Full'
-motor = Motor(step_pin, dir_pin, pin_m0, pin_m1, pin_m2, step_type)
-distance = HCSR04(18, 19)
+motor = Motor(step_pin, dir_pin, pin_m0, pin_m1, pin_m2, step_type)  # inicjujemy silnik
+distance = HCSR04(18, 19)  # inicjujemy czujnik odleglosci
 
 
+# strona startowa robota pokazująca ze jest wlaczony
 def show_index(request):
     server.send("OK")
 
 
+# ruch robota do przodu
 def MoveForward(request):
-    led.on()
-    server.send("HTTP/1.0 200 OK\r\n")
-    data = WebServer.get_request_query_params(request)
-    if distance.distance_cm() > 10:
+    led.on()  # zapalamy diode
+    server.send("HTTP/1.0 200 OK\r\n")  # wysyłamy odp do przeglądarki, że wszystko ok
+    data = WebServer.get_request_query_params(request)  # odczytujemy paramtery otrzymane w zapytaniu
+    if distance.distance_cm() > 10:  # sprawdzamy czy jest przeszkoda w odleglosci 10 cm
         server.send('OK')
-        motor.run(int(data['run']), True)
+        motor.run(int(data['run']), True)  # ruszamy do przodu o zadana ilosc
     else:
-        server.send('OBSTACLE')
+        server.send('OBSTACLE')  # wysylamy odp ze jest przeszkoda na drodze
     led.off()
 
 
+# ruch robota do tylu
 def MoveBackward(request):
     led.on()
     server.send("HTTP/1.0 200 OK\r\n")
@@ -64,6 +68,7 @@ def MoveBackward(request):
     led.off()
 
 
+# funkcja timelapse
 def TimeLapse(request):
     led.on()
     server.send("HTTP/1.0 200 OK\r\n")
@@ -83,6 +88,8 @@ def TimeLapse(request):
         led.off()
         sleep(delay)
 
+
+# blokowanie ruchu / wylaczanie czujnika
 def Distance(request):
     server.send("HTTP/1.0 200 OK\r\n")
     data = WebServer.get_request_query_params(request)
@@ -95,6 +102,7 @@ def Distance(request):
         server.send('OK SET 0')
 
 
+# serwer www odpowiedzialny
 server = MicroPyServer()
 server.add_route("/", show_index)
 server.add_route("/forward", MoveForward)
