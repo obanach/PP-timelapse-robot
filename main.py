@@ -83,15 +83,6 @@ def TimeLapse(request):
         led.off()
         sleep(delay)
 
-
-server = MicroPyServer()
-server.add_route("/", show_index)
-server.add_route("/forward", MoveForward)
-server.add_route("/backward", MoveBackward)
-server.add_route("/timelapse", TimeLapse)
-# server.add_route("/distance", Distance)
-server.start()
-
 def Distance(request):
     server.send("HTTP/1.0 200 OK\r\n")
     data = WebServer.get_request_query_params(request)
@@ -102,3 +93,12 @@ def Distance(request):
     else:
         distance.value(0)
         server.send('OK SET 0')
+
+
+server = MicroPyServer()
+server.add_route("/", show_index)
+server.add_route("/forward", MoveForward)
+server.add_route("/backward", MoveBackward)
+server.add_route("/timelapse", TimeLapse)
+server.add_route("/distance", Distance)
+server.start()
